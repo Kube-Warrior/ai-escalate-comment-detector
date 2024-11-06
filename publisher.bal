@@ -15,105 +15,119 @@ final email:SmtpClient smtpClient = check new (mailClient, username, app_passwor
 final http:Client googleChat = check new (GOOGLE_CHAT_API);
 final string template = check io:fileReadString(EMAIL_TEMPLATE_PATH);
 
-function invokeGoogleChatNotification(string caseNumber, string caseId, string frustratedLevel) returns GoogleChatResponse|error {
+function invokeGoogleChatNotification(string caseNumber, string caseId, string frustratedLevel)
+returns GoogleChatResponse|http:ClientError {
 
-    json paylod = {
-        "cards": [
+    GoogleChatRequest googleChatRequest = {
+        "cards":
             {
-                "header": {
-                    "title": "Frustraction Detected ⚠️"
-                },
-                "sections": [
-                    {
-                        "widgets": [
-                            {
-                                "keyValue": {
-                                    "topLabel": "Case ID/Number",
-                                    "content": caseId + "/" + caseNumber
-                                }
-                            },
-                            {
-                                "keyValue": {
-                                    "topLabel": "Frustraction Level",
-                                    "content": frustratedLevel
-                                }
+            "header": {
+                "title": "Frustration Detected ⚠️"
+            },
+            "sections": [
+                {
+                    "widgets": [
+                        {
+                            "keyValue": {
+                                "topLabel": "Case ID/Number",
+                                "content": caseId + "/" + caseNumber
                             }
-                        ]
-                    }
-                ]
-            }
-        ]
+                        },
+                        {
+                            "keyValue": {
+                                "topLabel": "Frustration Level",
+                                "content": frustratedLevel
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
     };
 
-    string response = check googleChat->post(googleChatSpaceId, paylod, mediaType = mime:APPLICATION_JSON);
-    json jsonResponse = check response.fromJsonString();
-    GoogleChatResponse googleChatResponse = check jsonResponse.cloneWithType();
-    log:printDebug("Google Chat Response :  " + googleChatResponse.toString());
-    return googleChatResponse;
+    return googleChat->post(googleChatSpaceId, {...googleChatRequest}, mediaType = mime:APPLICATION_JSON);
 
 }
 
 function sendEmail(EscalationResponse escalationResponse) returns error? {
 
-    string emailTemplateContent = check generateEmailTemplateContent(escalationResponse);
+    string emailTemplateContent = generateEmailTemplateContent(escalationResponse);
+    string? email = escalationResponse.assignedUserEmail;
 
-    if escalationResponse.assignedUserEmail == "" {
-        email:Message emailSettingsForOpenCasesResult = check setEmailSettingsForOpenCases(emailTemplateContent, smtpClient, escalationResponse);
-        check smtpClient->sendMessage(emailSettingsForOpenCasesResult);
-        log:printDebug(emailSettingsForOpenCasesResult.toString());
-    } else {
-        email:Message emailSettingsForAssignedCasesResult = check setEmailSettingsForAssignedCases(emailTemplateContent, smtpClient, escalationResponse, escalationResponse.productName, escalationResponse.abtTeamEmail);
+    if email is string {
+        email:Message emailSettingsForAssignedCasesResult =
+        setEmailSettingsForAssignedCases(emailTemplateContent, smtpClient, escalationResponse, email);
         check smtpClient->sendMessage(emailSettingsForAssignedCasesResult);
         log:printDebug(emailSettingsForAssignedCasesResult.toString());
+    } else {
+        email:Message emailSettingsForOpenCasesResult =
+        setEmailSettingsForOpenCases(emailTemplateContent, smtpClient, escalationResponse);
+        check smtpClient->sendMessage(emailSettingsForOpenCasesResult);
+        log:printDebug(emailSettingsForOpenCasesResult.toString());
     }
+
 }
 
-function createEmailList(EscalationResponse escalationResponse) returns string[]|error {
-
+function createEmailList(EscalationResponse escalationResponse) returns string[] {
+    string? email = escalationResponse.abtTeamEmail;
     if escalationResponse.assignedUserEmail == "" {
         string[] ccEmails = [];
-        if (escalationResponse.productName == PRODUCT_IDENTITY_SERVER || escalationResponse.productName == PRODUCT_IDENTITY_SERVER_ANALYTICS) {
-            ccEmails.push("");
-        } else if (escalationResponse.abtTeamEmail != "") {
-            ccEmails.push(escalationResponse.abtTeamEmail);
+
+        if (escalationResponse.productName == PRODUCT_IDENTITY_SERVER
+        || escalationResponse.productName == PRODUCT_IDENTITY_SERVER_ANALYTICS) {
+            ccEmails.push(EMAIL_IAM_CS);
+        } else if (email is string && email != "") {
+            ccEmails.push(email);
         }
         return ccEmails;
     } else {
-        string[] mailArr = check emailGroup.cloneWithType();
-        if (escalationResponse.productName == PRODUCT_IDENTITY_SERVER || escalationResponse.productName == PRODUCT_IDENTITY_SERVER_ANALYTICS) {
+        string[] mailArr = [...emailGroup];
+        if (escalationResponse.productName == PRODUCT_IDENTITY_SERVER
+        || escalationResponse.productName == PRODUCT_IDENTITY_SERVER_ANALYTICS) {
             mailArr.push(EMAIL_IAM_CS);
-        } else if (escalationResponse.abtTeamEmail != "") {
-            mailArr.push(escalationResponse.abtTeamEmail);
+        } else if (email is string && escalationResponse.abtTeamEmail != "") {
+            mailArr.push(email);
         }
         return mailArr;
     }
 }
 
-function setEmailSettingsForOpenCases(string emailBody, email:SmtpClient smtpClient, EscalationResponse finalFormattedResponse) returns email:Message|error
+function setEmailSettingsForOpenCases(string emailBody, email:SmtpClient smtpClient, EscalationResponse finalFormattedResponse)
+returns email:Message
     => {
     to: emailGroup,
-    cc: check createEmailList(finalFormattedResponse),
+    cc: createEmailList(finalFormattedResponse),
     'from: sourceEmail,
-    subject: EMAIL_SUBJECT_COMMON + " " + finalFormattedResponse.caseId,
+    subject: EMAIL_SUBJECT_COMMON + " " + finalFormattedResponse.caseNumber,
     contentType: mime:TEXT_HTML,
     htmlBody: emailBody
 };
 
-function setEmailSettingsForAssignedCases(string emailBody, email:SmtpClient smtpClient, EscalationResponse finalFormattedResponse, string productName, string abtTeamEmail) returns email:Message|error
+function setEmailSettingsForAssignedCases
+(string emailBody, email:SmtpClient smtpClient, EscalationResponse finalFormattedResponse, string email)
+returns email:Message
     => {
-    to: [finalFormattedResponse.assignedUserEmail],
-    cc: check createEmailList(finalFormattedResponse),
+    to: [email],
+    cc: createEmailList(finalFormattedResponse),
     'from: sourceEmail,
-    subject: EMAIL_SUBJECT_COMMON + " " + finalFormattedResponse.caseId,
+    subject: EMAIL_SUBJECT_COMMON + " " + finalFormattedResponse.caseNumber,
     contentType: mime:TEXT_HTML,
     htmlBody: emailBody
 };
 
-function generateEmailTemplateContent(EscalationResponse finalFormattedResponse) returns string|error {
+function generateEmailTemplateContent(EscalationResponse finalFormattedResponse) returns string {
+
+    string? email = finalFormattedResponse.assignedUserEmail;
 
     string result = re `caseNumber`.replaceAll(template, finalFormattedResponse.caseNumber);
     result = re `caseId`.replaceAll(result, finalFormattedResponse.caseId);
-    result = re `assignedUserEmail`.replaceAll(result, finalFormattedResponse.assignedUserEmail);
+
+    if (email is string) {
+        result = re `assignedUserEmail`.replaceAll(result, email);
+    } else {
+        result = re `assignedUserEmail`.replaceAll(result, "No Assignee Yet");
+    }
+
     result = re `frustratedLevel`.replaceAll(result, finalFormattedResponse.frustratedLevel.toString());
     result = re `commentPostedTimestampInSN`.replaceAll(result, finalFormattedResponse.commentPostedTimestampInSN);
 
