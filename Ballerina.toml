@@ -2,7 +2,7 @@
 org = "wso2"
 name = "ai_escalate_comment_detector"
 version = "0.1.0"
-distribution = "2201.9.4"
+distribution = "2201.8.6"
 
 [build-options]
 observabilityIncluded = true
