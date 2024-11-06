@@ -8,7 +8,7 @@
 import ballerina/http;
 import ballerina/log;
 
-isolated service on new http:Listener(9090) {
+service / on new http:Listener(9090) {
     resource function post escalations(EscalationRequest escalationRequest) returns EscalationResponse|EscalationResponseError {
 
         do {
