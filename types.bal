@@ -11,17 +11,21 @@ type EscalationRequest record {|
     string caseId;
     string caseNumber;
     string comment;
-    string assignee;
-    string assignedUserEmail;
+    string assignee?;
+    string assignedUserEmail?;
     string commentPostedTimestampInSN;
     string productName;
-    string abtTeamEmail;
+    string abtTeamEmail?;
 |};
 
 type OpenAIResponse record {|
     string comment;
     boolean isFrustrated;
     float frustratedLevel;
+|};
+
+type GoogleChatRequest record {|
+    Card cards;
 |};
 
 type GoogleChatResponse record {|
@@ -42,13 +46,13 @@ type Space record {
 type EscalationResponse record {|
     string caseId;
     string caseNumber;
-    string asginee;
-    string assignedUserEmail;
+    string asginee?;
+    string assignedUserEmail?;
     boolean isFrustrated;
     float frustratedLevel;
     string commentPostedTimestampInSN;
     string productName;
-    string abtTeamEmail;
+    string abtTeamEmail?;
 |};
 
 type Card record {|
