@@ -94,7 +94,7 @@ function setEmailSettingsForOpenCases(string emailBody, email:SmtpClient smtpCli
     to: emailGroup,
     cc: check createEmailList(finalFormattedResponse),
     'from: sourceEmail,
-    subject: EMAIL_SUBJECT_COMMON + " " + finalFormattedResponse.caseNumber,
+    subject: EMAIL_SUBJECT_COMMON + " " + finalFormattedResponse.caseId,
     contentType: mime:TEXT_HTML,
     htmlBody: emailBody
 };
@@ -104,7 +104,7 @@ function setEmailSettingsForAssignedCases(string emailBody, email:SmtpClient smt
     to: [finalFormattedResponse.assignedUserEmail],
     cc: check createEmailList(finalFormattedResponse),
     'from: sourceEmail,
-    subject: EMAIL_SUBJECT_COMMON + " " + finalFormattedResponse.caseNumber,
+    subject: EMAIL_SUBJECT_COMMON + " " + finalFormattedResponse.caseId,
     contentType: mime:TEXT_HTML,
     htmlBody: emailBody
 };
