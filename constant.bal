@@ -15,4 +15,4 @@ const OPEN_AI_ROLE_NAME = "user";
 const EMAIL_TEMPLATE_PATH = "./resources/email_template.html";
 const PRODUCT_IDENTITY_SERVER = "Identity Server";
 const PRODUCT_IDENTITY_SERVER_ANALYTICS = "Identity Server Analytics";
-const EMAIL_IAM_CS = "dehami@wso2.com";
+const EMAIL_IAM_CS = "kalubowila.dc25132@live.com";
