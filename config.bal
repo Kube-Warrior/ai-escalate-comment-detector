@@ -6,7 +6,7 @@
 // You may not alter or remove any copyright or other notice from copies of this content.
 
 public configurable string env = ?;
-public configurable string openAiApiKey = "";
+public configurable string openAiApiKey;
 public configurable string username= ?;
 public configurable string app_password = ?;
 public configurable string[] emailGroup = ?;
