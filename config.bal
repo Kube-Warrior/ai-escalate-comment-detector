@@ -12,6 +12,7 @@ public configurable string app_password = ?;
 public configurable string[] emailGroup = ?;
 public configurable string mailClient = ?;
 public configurable string sourceEmail = ?;
+public configurable string iam_cs_email = ?;
 public configurable float frustrationThreshhold = ?;
 public configurable string googleChatSpaceId = ?;
 public configurable string prePrompt = ?;
