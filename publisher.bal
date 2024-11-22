@@ -46,7 +46,6 @@ returns GoogleChatResponse|http:ClientError {
     };
 
     return googleChat->post(googleChatSpaceId, {...googleChatRequest}, mediaType = mime:APPLICATION_JSON);
-
 }
 
 function sendEmail(EscalationResponse escalationResponse) returns error? {
@@ -69,13 +68,14 @@ function sendEmail(EscalationResponse escalationResponse) returns error? {
 }
 
 function createEmailList(EscalationResponse escalationResponse) returns string[] {
+
     string? email = escalationResponse.abtTeamEmail;
     if escalationResponse.assignedUserEmail == "" {
         string[] ccEmails = [];
 
         if (escalationResponse.productName == PRODUCT_IDENTITY_SERVER
         || escalationResponse.productName == PRODUCT_IDENTITY_SERVER_ANALYTICS) {
-            ccEmails.push(EMAIL_IAM_CS);
+            ccEmails.push(iam_cs_email);
         } else if (email is string && email != "") {
             ccEmails.push(email);
         }
@@ -84,7 +84,7 @@ function createEmailList(EscalationResponse escalationResponse) returns string[]
         string[] mailArr = [...emailGroup];
         if (escalationResponse.productName == PRODUCT_IDENTITY_SERVER
         || escalationResponse.productName == PRODUCT_IDENTITY_SERVER_ANALYTICS) {
-            mailArr.push(EMAIL_IAM_CS);
+            mailArr.push(iam_cs_email);
         } else if (email is string && escalationResponse.abtTeamEmail != "") {
             mailArr.push(email);
         }
@@ -118,7 +118,6 @@ returns email:Message
 function generateEmailTemplateContent(EscalationResponse finalFormattedResponse) returns string {
 
     string? email = finalFormattedResponse.assignedUserEmail;
-
     string result = re `caseNumber`.replaceAll(template, finalFormattedResponse.caseNumber);
     result = re `caseId`.replaceAll(result, finalFormattedResponse.caseId);
 
