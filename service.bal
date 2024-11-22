@@ -9,7 +9,8 @@ import ballerina/http;
 import ballerina/log;
 
 service / on new http:Listener(9090) {
-    resource function post escalations(EscalationRequest escalationRequest) returns EscalationResponse|EscalationResponseError {
+    resource function post escalations(EscalationRequest escalationRequest)
+    returns EscalationResponse|EscalationResponseError {
 
         do {
             string response = check getChatCompletionResponse(escalationRequest.comment);
@@ -39,7 +40,8 @@ service / on new http:Listener(9090) {
     }
 }
 
-function generateEscalationResponse(EscalationRequest escalationRequest, OpenAIResponse openAIResponse) returns EscalationResponse|error
+function generateEscalationResponse(EscalationRequest escalationRequest, OpenAIResponse openAIResponse)
+returns EscalationResponse|error
     => {
     caseId: escalationRequest.caseId,
     caseNumber: escalationRequest.caseNumber,
