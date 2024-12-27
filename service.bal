@@ -26,7 +26,7 @@ service / on new http:Listener(9090) {
                         escalationRequest.caseNumber,
                         openAIResponse.frustratedLevel.toString()
                 );
-                check sendEmail(escalationResponse);
+                //check sendEmail(escalationResponse);
                 log:printDebug("Alert published to " + sendChatAlertResult.name);
 
             }
