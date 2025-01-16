@@ -8,6 +8,20 @@
 import ballerina/http;
 import ballerina/log;
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: [
+            "https://wso2sndev.wso2.com",
+            "https://support.wso2.com",
+            "https://wso2sndev.service-now.com"
+        ],
+        allowCredentials: true,
+        allowHeaders: ["accept", "Content-Type"],
+        exposeHeaders: ["X-CUSTOM-HEADER"],
+        maxAge: 84900
+    }
+}
+
 service / on new http:Listener(9090) {
     resource function post escalations(EscalationRequest escalationRequest)
     returns EscalationResponse|EscalationResponseError {
@@ -26,7 +40,6 @@ service / on new http:Listener(9090) {
                         escalationRequest.caseNumber,
                         openAIResponse.frustratedLevel.toString()
                 );
-                check sendEmail(escalationResponse);
                 log:printDebug("Alert published to " + sendChatAlertResult.name);
 
             }
